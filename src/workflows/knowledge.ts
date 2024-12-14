@@ -8,7 +8,8 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-export default class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
+// Export the workflow class to be instantiated in index.ts
+export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
   constructor(public env: Env) {}
 
   async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep) {

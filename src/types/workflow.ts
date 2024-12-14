@@ -19,3 +19,11 @@ export interface WorkflowEntrypoint<E = unknown> {
   env: E
   run(event: WorkflowEvent, step: WorkflowStep): Promise<void>
 }
+
+export interface MessagePayload {
+  type: 'email' | 'slack' | 'chat'
+  businessId: string
+  conversationId: string
+  content: string
+  metadata?: Record<string, unknown>
+}

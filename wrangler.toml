@@ -5,7 +5,7 @@ compatibility_date = "2024-01-01"
 [ai]
 binding = "AI"
 
-[vectorize]
+[[vectorize]]
 binding = "VECTORIZE"
 index_name = "support-knowledge"
 
@@ -26,7 +26,7 @@ consumers = [
   { queue = "support-messages" }
 ]
 
-[workflows]
-scripts = [
-  { name = "knowledge-workflow", binding = "KNOWLEDGE_WORKFLOW", entrypoint = "src/workflows/knowledge.ts" }
-]
+[[workflows]]
+name = "knowledge-workflow"
+binding = "KNOWLEDGE_WORKFLOW"
+entrypoint = "src/workflows/knowledge.ts"

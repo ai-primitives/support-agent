@@ -1,0 +1,14 @@
+name = 'support-agent'
+main = 'src/index.ts'
+compatibility_date = '2023-12-01'
+
+[ai]
+binding = 'AI'
+
+[vars]
+ENVIRONMENT = 'development'
+DATABASE_URL = 'postgres://user_muxtpcaoxt:qLdnNzPrhgWeX8j3gcPG@devinapps-backend-prod.cluster-clussqewa0rh.us-west-2.rds.amazonaws.com/db_ocbfbhuiwj?sslmode=require'
+
+[[vectorize]]
+binding = 'SUPPORT_VECTORIZE'
+index_name = 'support-knowledge'

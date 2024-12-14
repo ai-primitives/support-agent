@@ -8,7 +8,7 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
+class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
   constructor(public env: Env) {}
 
   async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep) {
@@ -60,3 +60,6 @@ export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
     })
   }
 }
+
+// Export the workflow instance for Cloudflare Workers
+export const KNOWLEDGE_WORKFLOW = KnowledgeWorkflow

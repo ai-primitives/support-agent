@@ -213,37 +213,71 @@ app.get('/test/email', async (c) => {
   try {
     console.log('Testing email handler...')
     const testEmail = {
-      type: 'email' as const,
-      businessId: 'test-business',
-      conversationId: crypto.randomUUID(),
-      email: {
-        from: 'customer@example.com',
-        to: ['support@test-business.com'],
-        subject: 'Test Support Request',
-        text: 'How do I reset my password?'
-      }
+      from: 'customer@example.com',
+      to: ['support@test-business.com'],
+      subject: 'Test Support Request',
+      text: 'How do I reset my password?'
     }
 
     if (LOCAL_MODE) {
-      console.log('Running in local mode - testing email handler')
-      const response = await withTimeout(
-        handleRagQuery(testEmail.email.text, {
-          ...c.env,
-          LOCAL_MODE: true,
-          VECTORIZE: {
-            query: mockVectorizeQuery,
-            insert: async () => {},
-            upsert: async () => {},
-            delete: async () => {}
-          }
-        }),
-        TEST_TIMEOUT
-      )
-      console.log('Email Response:', response)
-      return c.json({ status: 'success', response })
+      console.log('Running in local mode - testing email handler with mock data')
+      try {
+        // First test RAG query
+        console.log('Testing RAG query...')
+        const ragResponse = await withTimeout(
+          handleRagQuery(testEmail.text, {
+            ...c.env,
+            LOCAL_MODE: true,
+            VECTORIZE: {
+              query: mockVectorizeQuery,
+              insert: async () => {},
+              upsert: async () => {},
+              delete: async () => {}
+            }
+          }),
+          TEST_TIMEOUT
+        )
+        console.log('RAG Response:', ragResponse)
+
+        // Then test email handler
+        console.log('Testing email handler...')
+        const emailResponse = await withTimeout(
+          handleEmail(testEmail, {
+            ...c.env,
+            LOCAL_MODE: true,
+            VECTORIZE: {
+              query: mockVectorizeQuery,
+              insert: async () => {},
+              upsert: async () => {},
+              delete: async () => {}
+            }
+          }),
+          TEST_TIMEOUT
+        )
+        console.log('Email Handler Response:', emailResponse)
+
+        return c.json({
+          status: 'success',
+          ragResponse,
+          emailResponse
+        })
+      } catch (error) {
+        console.error('Error in email handler test:', error)
+        return c.json({
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }, 500)
+      }
     }
 
-    await c.env.MESSAGE_QUEUE.send(testEmail)
+    // In production mode, send through queue
+    const queueMessage = {
+      type: 'email' as const,
+      businessId: 'test-business',
+      conversationId: crypto.randomUUID(),
+      email: testEmail
+    }
+    await c.env.MESSAGE_QUEUE.send(queueMessage)
     return c.json({ status: 'success' })
   } catch (error) {
     console.error('Error testing email handler:', error)

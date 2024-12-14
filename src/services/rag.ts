@@ -128,3 +128,20 @@ export class RAGService {
     }
   }
 }
+
+export async function handleRagQuery(text: string, env: Env): Promise<string> {
+  const ragService = new RAGService(env);
+  try {
+    const results = await ragService.searchKnowledge('test-business', text);
+
+    if (results.length === 0) {
+      return 'I apologize, but I don\'t have enough information to answer your question accurately.';
+    }
+
+    const bestMatch = results[0];
+    return bestMatch.content;
+  } catch (error) {
+    console.error('Error in RAG query:', error);
+    return 'I apologize, but I encountered an error while processing your request.';
+  }
+}

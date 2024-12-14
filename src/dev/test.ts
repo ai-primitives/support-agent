@@ -2,19 +2,8 @@ import { Env } from '../bindings'
 import { Hono } from 'hono'
 import { ChatSession } from '../durable_objects/chat_session'
 import { KnowledgeWorkflow } from '../workflows/knowledge'
-
-interface BusinessResponse {
-  id: string
-  name: string
-  domain: string
-}
-
-interface PersonaResponse {
-  id: string
-  businessId: string
-  name: string
-  description: string
-}
+import { handleRagQuery } from '../services/rag'
+import { handleEmail } from '../handlers/email'
 
 const LOCAL_MODE = true // Enable local development mode
 const TEST_TIMEOUT = 10000 // 10 second timeout for tests
@@ -32,11 +21,11 @@ async function testWorkersAI(env: Env) {
     const timeout = setTimeout(() => controller.abort(), TEST_TIMEOUT)
 
     try {
-      const embedding = await env.AI.run('@cf/bge-small-en-v1.5', {
+      const response = await env.AI.run('@cf/bge-small-en-v1.5', {
         text
       })
       console.log('✅ Workers AI embedding generated successfully')
-      return embedding
+      return response.data[0] // Return first embedding from response
     } finally {
       clearTimeout(timeout)
     }
@@ -70,8 +59,7 @@ async function testVectorize(env: Env, embedding: number[]) {
       }])
       console.log('✅ Vectorize upsert successful')
 
-      const results = await env.VECTORIZE.query({
-        vector: embedding,
+      const results = await env.VECTORIZE.query(embedding, {
         topK: 1
       })
       console.log('✅ Vectorize query successful:', results)
@@ -200,13 +188,45 @@ app.get('/test/workflow', async (c) => {
   }
 })
 
+app.get('/test/email', async (c) => {
+  try {
+    const testEmail = {
+      type: 'email' as const,
+      businessId: 'test-business',
+      conversationId: crypto.randomUUID(),
+      email: {
+        from: 'customer@example.com',
+        to: ['support@test-business.com'],
+        subject: 'Test Support Request',
+        text: 'How do I reset my password?'
+      }
+    };
+
+    if (LOCAL_MODE) {
+      console.log('Running in local mode - testing email handler');
+      const response = await handleRagQuery(testEmail.email.text, c.env);
+      console.log('Email Response:', response);
+      return c.json({ status: 'success', response });
+    }
+
+    await c.env.MESSAGE_QUEUE.send(testEmail);
+    return c.json({ status: 'success' });
+  } catch (error) {
+    return c.json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
+  }
+})
+
 // Main test endpoint that runs all tests
 app.get('/test', async (c) => {
   const results = {
     ai: false,
     vectorize: false,
     queue: false,
-    workflow: false
+    workflow: false,
+    email: false
   }
 
   try {
@@ -222,6 +242,16 @@ app.get('/test', async (c) => {
 
     await testWorkflow(c.env)
     results.workflow = true
+
+    // Test email handler
+    const testEmail = {
+      from: 'customer@example.com',
+      to: ['support@test-business.com'],
+      subject: 'Test Support Request',
+      text: 'How do I reset my password?'
+    }
+    await handleEmail(testEmail, c.env)
+    results.email = true
 
     console.log('✅ All tests completed successfully')
     return c.json({ status: 'success', results })

@@ -6,7 +6,6 @@ import { handle } from './handlers'
 import type { Env } from './bindings'
 import { ChatSession } from './durable_objects/chat_session'
 import { runTests } from './dev/test'
-import { KnowledgeWorkflow } from './workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -28,9 +27,6 @@ app.get('/test', async (c) => {
   await runTests(c.env)
   return c.json({ message: 'Tests completed' })
 })
-
-// Export the workflow object for Cloudflare Workers
-export const KNOWLEDGE_WORKFLOW = KnowledgeWorkflow
 
 export default app
 export { ChatSession }

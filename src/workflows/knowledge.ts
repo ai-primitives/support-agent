@@ -8,8 +8,8 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-// Export a plain object that matches Cloudflare's workflow interface
-export const KnowledgeWorkflow = {
+// Export the workflow directly as the default export
+export default {
   async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep, env: Env) {
     const { businessId, content, metadata } = event.payload
 

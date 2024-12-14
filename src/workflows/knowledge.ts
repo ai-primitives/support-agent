@@ -1,6 +1,6 @@
 import { RAGService } from '../services/rag'
 import type { Env } from '../bindings'
-import type { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from '../types/workflow'
+import type { WorkflowEvent, WorkflowStep } from '../types/workflow'
 
 interface KnowledgePayload {
   businessId: string
@@ -8,11 +8,9 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-// Export the workflow class to be instantiated in index.ts
-export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
-  constructor(public env: Env) {}
-
-  async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep) {
+// Export a plain object that matches Cloudflare's workflow interface
+export const KnowledgeWorkflow = {
+  async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep, env: Env) {
     const { businessId, content, metadata } = event.payload
 
     // Validate input
@@ -22,7 +20,7 @@ export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
 
     // Process knowledge using RAG service
     await step.do('process_knowledge', async () => {
-      const rag = new RAGService(this.env)
+      const rag = new RAGService(env)
       const id = crypto.randomUUID()
 
       try {
@@ -42,7 +40,7 @@ export class KnowledgeWorkflow implements WorkflowEntrypoint<Env> {
     // Queue message for notification
     await step.do('notify', async () => {
       try {
-        await this.env.MESSAGE_QUEUE.send({
+        await env.MESSAGE_QUEUE.send({
           type: 'chat',
           businessId,
           conversationId: 'system',

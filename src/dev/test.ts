@@ -69,11 +69,18 @@ async function testQueue(env: Env) {
 async function testWorkflow(env: Env) {
   console.log('Testing Knowledge Workflow...')
   try {
-    const result = await env.KNOWLEDGE_WORKFLOW.execute({
-      businessId: 'test-business',
-      text: 'Test knowledge entry',
-      metadata: { source: 'test' }
-    })
+    const result = await env.KNOWLEDGE_WORKFLOW.run({
+      data: {
+        businessId: 'test-business',
+        content: 'Test knowledge entry',
+        metadata: { source: 'test' }
+      }
+    }, {
+      do: async (name: string, fn: () => Promise<void>) => {
+        console.log(`Executing step: ${name}`)
+        await fn()
+      }
+    }, env)
     console.log('✅ Knowledge Workflow execution successful:', result)
   } catch (error) {
     console.error('❌ Knowledge Workflow test failed:', error)

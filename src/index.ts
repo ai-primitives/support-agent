@@ -29,8 +29,8 @@ app.get('/test', async (c) => {
   return c.json({ message: 'Tests completed' })
 })
 
-// Export the workflow instance for Cloudflare Workers
-export const KNOWLEDGE_WORKFLOW = new KnowledgeWorkflow({} as Env)
+// Export the workflow object for Cloudflare Workers
+export const KNOWLEDGE_WORKFLOW = KnowledgeWorkflow
 
 export default app
 export { ChatSession }

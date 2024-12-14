@@ -8,8 +8,8 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-// Export the workflow directly as the default export
-export default {
+// Export as a named export to match the binding name
+export const KNOWLEDGE_WORKFLOW = {
   async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep, env: Env) {
     const { businessId, content, metadata } = event.payload
 

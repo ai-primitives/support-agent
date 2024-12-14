@@ -6,6 +6,7 @@ import { handle } from './handlers'
 import type { Env } from './bindings'
 import { ChatSession } from './durable_objects/chat_session'
 import { runTests } from './dev/test'
+import { KNOWLEDGE_WORKFLOW } from './workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -30,3 +31,4 @@ app.get('/test', async (c) => {
 
 export default app
 export { ChatSession }
+export { KNOWLEDGE_WORKFLOW }

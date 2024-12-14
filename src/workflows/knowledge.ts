@@ -1,3 +1,4 @@
+import { Workflow } from '@cloudflare/workers-types'
 import { RAGService } from '../services/rag'
 import type { Env } from '../bindings'
 import type { WorkflowEvent, WorkflowStep } from '../types/workflow'
@@ -8,54 +9,50 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-// Export as a named export to match the binding name
-export const KNOWLEDGE_WORKFLOW = {
-  async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep, env: Env) {
-    const { businessId, content, metadata } = event.payload
+export class KnowledgeWorkflow extends Workflow {
+  constructor(private readonly env: Env) {
+    super()
+  }
 
-    // Validate input
-    if (!content.trim()) {
-      throw new Error('Content cannot be empty')
-    }
+  async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep) {
+    const ragService = new RAGService(this.env)
 
-    // Process knowledge using RAG service
-    await step.do('process_knowledge', async () => {
-      const rag = new RAGService(env)
-      const id = crypto.randomUUID()
-
-      try {
-        await rag.addKnowledge({
-          id,
-          businessId,
-          content,
-          metadata
+    try {
+      // Process knowledge entry using step.do
+      await step.do('add_knowledge', async () => {
+        await ragService.addKnowledge({
+          id: crypto.randomUUID(),
+          businessId: event.payload.businessId,
+          content: event.payload.content,
+          metadata: event.payload.metadata
         })
-        console.log(`[Workflow] Added knowledge entry ${id} for business ${businessId}`)
-      } catch (error) {
-        console.error(`[Workflow] Failed to add knowledge: ${error instanceof Error ? error.message : String(error)}`)
-        throw error
-      }
-    })
+      })
 
-    // Queue message for notification
-    await step.do('notify', async () => {
-      try {
-        await env.MESSAGE_QUEUE.send({
-          type: 'chat',
-          businessId,
-          conversationId: 'system',
-          content: 'New knowledge base entry added',
-          metadata: {
-            event: 'knowledge_added',
-            businessId,
-            timestamp: new Date().toISOString()
+      // Send notification via queue using step.do
+      await step.do('send_notification', async () => {
+        await this.env.MESSAGE_QUEUE.send({
+          type: 'knowledge_processed',
+          payload: {
+            businessId: event.payload.businessId,
+            status: 'success'
           }
         })
-        console.log(`[Workflow] Sent notification for business ${businessId}`)
-      } catch (error) {
-        console.error(`[Workflow] Failed to send notification: ${error instanceof Error ? error.message : String(error)}`)
-        throw error
-      }
-    })
+      })
+    } catch (error) {
+      console.error('Error in knowledge workflow:', error)
+
+      // Send error notification using step.do
+      await step.do('send_error', async () => {
+        await this.env.MESSAGE_QUEUE.send({
+          type: 'knowledge_error',
+          payload: {
+            businessId: event.payload.businessId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        })
+      })
+
+      throw error
+    }
   }
 }

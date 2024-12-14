@@ -29,4 +29,5 @@ consumers = [
 [[workflows]]
 name = "knowledge-workflow"
 binding = "KNOWLEDGE_WORKFLOW"
+class_name = "KnowledgeWorkflow"
 entrypoint = "src/workflows/knowledge.ts"

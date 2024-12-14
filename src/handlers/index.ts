@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import type { Env } from '../bindings'
 import { RAGService } from '../services/rag'
+import { MessageService } from '../services/message'
 
 const businessSchema = z.object({
   name: z.string(),
@@ -19,10 +20,17 @@ const knowledgeSchema = z.object({
   metadata: z.record(z.unknown()).optional()
 })
 
+const messageSchema = z.object({
+  type: z.enum(['email', 'slack', 'chat']),
+  content: z.string(),
+  metadata: z.record(z.unknown()).optional()
+})
+
 type ValidatedContext = Context<{ Bindings: Env }>
 type BusinessInput = z.infer<typeof businessSchema>
 type PersonaInput = z.infer<typeof personaSchema>
 type KnowledgeInput = z.infer<typeof knowledgeSchema>
+type MessageInput = z.infer<typeof messageSchema>
 
 export const handle = {
   createBusiness: zValidator('json', businessSchema, (async (c: ValidatedContext) => {
@@ -85,5 +93,23 @@ export const handle = {
     const results = await rag.searchKnowledge(businessId, query)
 
     return c.json({ results })
-  }
+  },
+
+  sendMessage: zValidator('json', messageSchema, (async (c: ValidatedContext) => {
+    const businessId = c.req.param('id')
+    const conversationId = c.req.param('conversationId')
+    const input = await c.req.json() as MessageInput
+    const data = messageSchema.parse(input)
+
+    const messageService = new MessageService(c.env)
+    await messageService.sendMessage({
+      type: data.type,
+      businessId,
+      conversationId,
+      content: data.content,
+      metadata: data.metadata
+    })
+
+    return c.json({ status: 'message queued' }, 202)
+  }) as any)
 }

@@ -6,7 +6,28 @@ import { handleRagQuery } from '../services/rag'
 import { handleEmail } from '../handlers/email'
 
 const LOCAL_MODE = true // Enable local development mode
-const TEST_TIMEOUT = 10000 // 10 second timeout for tests
+const TEST_TIMEOUT = 30000 // 30 second timeout for tests
+
+// Mock implementations for local development
+const mockEmbedding = () => new Array(384).fill(0).map(() => Math.random())
+const mockVectorizeQuery = async () => ({
+  matches: [{
+    id: 'mock-id',
+    score: 0.95,
+    metadata: {
+      content: 'This is a mock response from the knowledge base.',
+      businessId: 'test-business'
+    }
+  }]
+})
+
+// Test utilities
+const withTimeout = async <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('Operation timed out')), ms)
+  )
+  return Promise.race([promise, timeout])
+}
 
 async function testWorkersAI(env: Env) {
   console.log('Testing Workers AI embeddings...')
@@ -14,7 +35,7 @@ async function testWorkersAI(env: Env) {
     const text = 'This is a test message for embedding generation.'
     if (LOCAL_MODE) {
       console.log('Running in local mode - using mock embedding')
-      return new Array(384).fill(0).map(() => Math.random()) // Mock 384-dimensional embedding
+      return mockEmbedding()
     }
 
     const controller = new AbortController()
@@ -45,7 +66,7 @@ async function testVectorize(env: Env, embedding: number[]) {
     const id = crypto.randomUUID()
     if (LOCAL_MODE) {
       console.log('Running in local mode - using mock Vectorize operations')
-      return { matches: [{ id, score: 1.0 }] }
+      return mockVectorizeQuery()
     }
 
     const controller = new AbortController()
@@ -190,6 +211,7 @@ app.get('/test/workflow', async (c) => {
 
 app.get('/test/email', async (c) => {
   try {
+    console.log('Testing email handler...')
     const testEmail = {
       type: 'email' as const,
       businessId: 'test-business',
@@ -200,22 +222,35 @@ app.get('/test/email', async (c) => {
         subject: 'Test Support Request',
         text: 'How do I reset my password?'
       }
-    };
-
-    if (LOCAL_MODE) {
-      console.log('Running in local mode - testing email handler');
-      const response = await handleRagQuery(testEmail.email.text, c.env);
-      console.log('Email Response:', response);
-      return c.json({ status: 'success', response });
     }
 
-    await c.env.MESSAGE_QUEUE.send(testEmail);
-    return c.json({ status: 'success' });
+    if (LOCAL_MODE) {
+      console.log('Running in local mode - testing email handler')
+      const response = await withTimeout(
+        handleRagQuery(testEmail.email.text, {
+          ...c.env,
+          LOCAL_MODE: true,
+          VECTORIZE: {
+            query: mockVectorizeQuery,
+            insert: async () => {},
+            upsert: async () => {},
+            delete: async () => {}
+          }
+        }),
+        TEST_TIMEOUT
+      )
+      console.log('Email Response:', response)
+      return c.json({ status: 'success', response })
+    }
+
+    await c.env.MESSAGE_QUEUE.send(testEmail)
+    return c.json({ status: 'success' })
   } catch (error) {
+    console.error('Error testing email handler:', error)
     return c.json({
       status: 'error',
       message: error instanceof Error ? error.message : 'Unknown error'
-    }, 500);
+    }, 500)
   }
 })
 

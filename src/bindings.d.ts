@@ -27,5 +27,5 @@ export interface Env {
     run(model: string, inputs: { text: string }): Promise<number[]>
   }
   MESSAGE_QUEUE: Queue<MessagePayload>
-  KNOWLEDGE_WORKFLOW: Workflow<KnowledgeWorkflowPayload>
+  KNOWLEDGE_WORKFLOW: WorkflowNamespace
 }

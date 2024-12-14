@@ -1,4 +1,3 @@
-import { Workflow } from '@cloudflare/workers-types'
 import { RAGService } from '../services/rag'
 import type { Env } from '../bindings'
 import type { WorkflowEvent, WorkflowStep } from '../types/workflow'
@@ -9,10 +8,8 @@ interface KnowledgePayload {
   metadata?: Record<string, unknown>
 }
 
-export class KnowledgeWorkflow extends Workflow {
-  constructor(private readonly env: Env) {
-    super()
-  }
+export class KnowledgeWorkflow {
+  constructor(private readonly env: Env) {}
 
   async run(event: WorkflowEvent<KnowledgePayload>, step: WorkflowStep) {
     const ragService = new RAGService(this.env)
@@ -32,10 +29,8 @@ export class KnowledgeWorkflow extends Workflow {
       await step.do('send_notification', async () => {
         await this.env.MESSAGE_QUEUE.send({
           type: 'knowledge_processed',
-          payload: {
-            businessId: event.payload.businessId,
-            status: 'success'
-          }
+          businessId: event.payload.businessId,
+          status: 'success'
         })
       })
     } catch (error) {
@@ -45,10 +40,8 @@ export class KnowledgeWorkflow extends Workflow {
       await step.do('send_error', async () => {
         await this.env.MESSAGE_QUEUE.send({
           type: 'knowledge_error',
-          payload: {
-            businessId: event.payload.businessId,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
+          businessId: event.payload.businessId,
+          error: error instanceof Error ? error.message : 'Unknown error'
         })
       })
 

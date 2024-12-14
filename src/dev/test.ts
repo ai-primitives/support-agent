@@ -1,4 +1,5 @@
 import { Env } from '../bindings'
+import { Hono } from 'hono'
 
 interface BusinessResponse {
   id: string
@@ -140,17 +141,25 @@ async function testAPI() {
   }
 }
 
-// Run all tests
-export async function runTests(env: Env) {
+// Create Hono app for test endpoints
+const app = new Hono<{ Bindings: Env }>()
+
+// Add test endpoint
+app.get('/test', async (c) => {
   try {
     console.log('Starting integration tests...')
-    const embedding = await testWorkersAI(env)
-    await testVectorize(env, embedding)
-    await testQueue(env)
-    await testWorkflow(env)
+    const embedding = await testWorkersAI(c.env)
+    await testVectorize(c.env, embedding)
+    await testQueue(c.env)
+    await testWorkflow(c.env)
     await testAPI()
     console.log('✅ All tests completed successfully')
+    return c.json({ status: 'success', message: 'All tests completed successfully' })
   } catch (error) {
     console.error('❌ Tests failed:', error)
+    return c.json({ status: 'error', message: error instanceof Error ? error.message : 'Unknown error' }, 500)
   }
-}
+})
+
+// Export default fetch handler for module worker
+export default app

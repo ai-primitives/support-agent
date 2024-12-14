@@ -5,19 +5,28 @@ compatibility_date = "2024-01-01"
 [ai]
 binding = "AI"
 
-[[vectorize]]
+[vectorize]
 binding = "VECTORIZE"
 index_name = "support-knowledge"
 
-[[durable_objects]]
-binding = "CHAT_SESSIONS"
-class_name = "ChatSession"
+[durable_objects]
+bindings = [
+  { name = "CHAT_SESSIONS", class_name = "ChatSession" }
+]
 
-[[queues]]
-binding = "MESSAGE_QUEUE"
-name = "support-messages"
+[[migrations]]
+tag = "v1"
+new_classes = ["ChatSession"]
 
-[[workflows]]
-name = "knowledge-workflow"
-binding = "KNOWLEDGE_WORKFLOW"
-entrypoint = "src/workflows/knowledge.ts"
+[queues]
+producers = [
+  { binding = "MESSAGE_QUEUE", queue = "support-messages" }
+]
+consumers = [
+  { queue = "support-messages" }
+]
+
+[workflows]
+scripts = [
+  { name = "knowledge-workflow", binding = "KNOWLEDGE_WORKFLOW", entrypoint = "src/workflows/knowledge.ts" }
+]

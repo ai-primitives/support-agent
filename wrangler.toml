@@ -20,3 +20,4 @@ name = "support-messages"
 [[workflows]]
 name = "knowledge-workflow"
 binding = "KNOWLEDGE_WORKFLOW"
+entrypoint = "src/workflows/knowledge.ts"

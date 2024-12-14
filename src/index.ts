@@ -16,6 +16,7 @@ app.post('/api/businesses/:id/personas', handle.createPersona)
 app.post('/api/businesses/:id/knowledge', handle.addKnowledge)
 app.get('/api/businesses/:id/knowledge/search', handle.searchKnowledge)
 app.post('/api/businesses/:id/conversations/:conversationId/messages', handle.sendMessage)
+app.post('/api/businesses/:id/workflows/knowledge', handle.triggerKnowledgeWorkflow)
 
 app.get('/', (c) => c.json({ message: 'Support Agent API' }))
 

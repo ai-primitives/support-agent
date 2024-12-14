@@ -26,11 +26,17 @@ const messageSchema = z.object({
   metadata: z.record(z.unknown()).optional()
 })
 
+const workflowSchema = z.object({
+  content: z.string(),
+  metadata: z.record(z.unknown()).optional()
+})
+
 type ValidatedContext = Context<{ Bindings: Env }>
 type BusinessInput = z.infer<typeof businessSchema>
 type PersonaInput = z.infer<typeof personaSchema>
 type KnowledgeInput = z.infer<typeof knowledgeSchema>
 type MessageInput = z.infer<typeof messageSchema>
+type WorkflowInput = z.infer<typeof workflowSchema>
 
 export const handle = {
   createBusiness: zValidator('json', businessSchema, (async (c: ValidatedContext) => {
@@ -38,7 +44,6 @@ export const handle = {
     const data = businessSchema.parse(input)
     const id = crypto.randomUUID()
 
-    // Store business data in Durable Object
     const businessObj = c.env.CHAT_SESSIONS.get(c.env.CHAT_SESSIONS.idFromName(`business:${id}`))
     await businessObj.fetch('https://dummy-url/initialize', {
       method: 'POST',
@@ -54,7 +59,6 @@ export const handle = {
     const data = personaSchema.parse(input)
     const id = crypto.randomUUID()
 
-    // Store persona data in Durable Object
     const personaObj = c.env.CHAT_SESSIONS.get(c.env.CHAT_SESSIONS.idFromName(`persona:${id}`))
     await personaObj.fetch('https://dummy-url/initialize', {
       method: 'POST',
@@ -111,5 +115,19 @@ export const handle = {
     })
 
     return c.json({ status: 'message queued' }, 202)
+  }) as any),
+
+  triggerKnowledgeWorkflow: zValidator('json', workflowSchema, (async (c: ValidatedContext) => {
+    const businessId = c.req.param('id')
+    const input = await c.req.json() as WorkflowInput
+    const data = workflowSchema.parse(input)
+
+    await c.env.KNOWLEDGE_WORKFLOW.dispatch({
+      businessId,
+      content: data.content,
+      metadata: data.metadata
+    })
+
+    return c.json({ status: 'workflow triggered' }, 202)
   }) as any)
 }

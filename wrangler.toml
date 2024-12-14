@@ -1,0 +1,22 @@
+name = "support-agent"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "support-knowledge"
+
+[[durable_objects]]
+binding = "CHAT_SESSIONS"
+class_name = "ChatSession"
+
+[[queues]]
+binding = "MESSAGE_QUEUE"
+name = "support-messages"
+
+[[workflows]]
+name = "knowledge-workflow"
+binding = "KNOWLEDGE_WORKFLOW"

@@ -1,5 +1,7 @@
 import { Env } from '../bindings'
 import { Hono } from 'hono'
+import { ChatSession } from '../durable_objects/chat_session'
+import { KnowledgeWorkflow } from '../workflows/knowledge'
 
 interface BusinessResponse {
   id: string
@@ -163,3 +165,6 @@ app.get('/test', async (c) => {
 
 // Export default fetch handler for module worker
 export default app
+
+// Export required classes for Cloudflare Workers
+export { ChatSession, KnowledgeWorkflow }

@@ -4,6 +4,8 @@ import { prettyJSON } from 'hono/pretty-json'
 import { cors } from 'hono/cors'
 import { handle } from './handlers'
 import type { Env } from './bindings'
+import { ChatSession } from './durable_objects/chat_session'
+import { runTests } from './dev/test'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -20,4 +22,11 @@ app.post('/api/businesses/:id/workflows/knowledge', handle.triggerKnowledgeWorkf
 
 app.get('/', (c) => c.json({ message: 'Support Agent API' }))
 
+// Development test endpoint
+app.get('/test', async (c) => {
+  await runTests(c.env)
+  return c.json({ message: 'Tests completed' })
+})
+
 export default app
+export { ChatSession }

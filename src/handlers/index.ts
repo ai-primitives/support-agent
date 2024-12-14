@@ -2,6 +2,7 @@ import { Context } from 'hono'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import type { Env } from '../bindings'
+import { RAGService } from '../services/rag'
 
 const businessSchema = z.object({
   name: z.string(),
@@ -61,8 +62,14 @@ export const handle = {
     const data = knowledgeSchema.parse(input)
     const id = crypto.randomUUID()
 
-    // Store knowledge in Vectorize (implementation in next step)
-    // For now, just return success
+    const rag = new RAGService(c.env)
+    await rag.addKnowledge({
+      id,
+      businessId,
+      content: data.content,
+      metadata: data.metadata
+    })
+
     return c.json({ id, businessId, content: data.content, metadata: data.metadata }, 201)
   }) as any),
 
@@ -74,8 +81,9 @@ export const handle = {
       return c.json({ error: 'Query parameter required' }, 400)
     }
 
-    // Search knowledge using Vectorize (implementation in next step)
-    // For now, return empty results
-    return c.json({ results: [] })
+    const rag = new RAGService(c.env)
+    const results = await rag.searchKnowledge(businessId, query)
+
+    return c.json({ results })
   }
 }

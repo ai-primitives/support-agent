@@ -4,6 +4,9 @@ import { zValidator } from '@hono/zod-validator'
 import type { Env } from '../bindings'
 import { RAGService } from '../services/rag'
 import { MessageService } from '../services/message'
+import { handleEmail } from './email'
+import { handleSlack } from './slack'
+import { handleChat } from './chat'
 
 const businessSchema = z.object({
   name: z.string(),
@@ -39,6 +42,11 @@ type MessageInput = z.infer<typeof messageSchema>
 type WorkflowInput = z.infer<typeof workflowSchema>
 
 export const handle = {
+  // Multi-channel handlers
+  handleEmail,
+  handleSlack,
+  handleChat,
+
   createBusiness: zValidator('json', businessSchema, (async (c: ValidatedContext) => {
     const input = await c.req.json() as BusinessInput
     const data = businessSchema.parse(input)

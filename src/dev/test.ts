@@ -1,8 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../bindings'
 import { MessagePayload } from '../types/workflow'
-import { ChatSession } from '../durable_objects/chat_session'
-import { KnowledgeWorkflow } from '../workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -245,5 +243,198 @@ app.post('/test/workflow', async (c) => {
   }
 })
 
-export { ChatSession, KnowledgeWorkflow }
+// Add email handler endpoint
+app.post('/test/email', async (c) => {
+  const start = Date.now();
+  try {
+    const body = await c.req.json();
+    const { from, subject, content } = body;
+
+    if (!from || !subject || !content) {
+      return c.json({
+        error: 'Missing required fields: from, subject, content',
+        mode: 'local',
+        duration_ms: Date.now() - start
+      }, 400);
+    }
+
+    // Mock email processing
+    const mockResponse = {
+      success: true,
+      messageId: crypto.randomUUID(),
+      status: 'queued',
+      mode: 'local',
+      duration_ms: Date.now() - start,
+      response: {
+        from: 'support@example.com',
+        to: from,
+        subject: `Re: ${subject}`,
+        text: `Thank you for your message. Our AI assistant is processing your request: "${content}"`
+      }
+    };
+
+    console.log('[Email Test] Mock Response:', mockResponse);
+    return c.json(mockResponse);
+
+  } catch (error) {
+    console.error('[Email Test] Error:', error);
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      mode: 'local',
+      duration_ms: Date.now() - start
+    }, 500);
+  }
+});
+
+// Add Slack handler endpoint
+app.post('/test/slack', async (c) => {
+  const start = Date.now();
+  try {
+    const body = await c.req.json();
+    const { channel, user, text, thread_ts } = body;
+
+    if (!channel || !user || !text) {
+      return c.json({
+        error: 'Missing required fields: channel, user, text',
+        mode: 'local',
+        duration_ms: Date.now() - start
+      }, 400);
+    }
+
+    // Mock Slack processing
+    const mockResponse = {
+      success: true,
+      messageId: crypto.randomUUID(),
+      status: 'queued',
+      mode: 'local',
+      duration_ms: Date.now() - start,
+      response: {
+        channel,
+        text: `Hi <@${user}>, thanks for your message! Our AI assistant is processing: "${text}"`,
+        thread_ts,
+      }
+    };
+
+    console.log('[Slack Test] Mock Response:', mockResponse);
+    return c.json(mockResponse);
+
+  } catch (error) {
+    console.error('[Slack Test] Error:', error);
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      mode: 'local',
+      duration_ms: Date.now() - start
+    }, 500);
+  }
+});
+
+// Add Chat Widget handler endpoint
+app.post('/test/chat', async (c) => {
+  const start = Date.now();
+  try {
+    const body = await c.req.json();
+    const { sessionId, userId, text } = body;
+
+    if (!sessionId || !userId || !text) {
+      return c.json({
+        error: 'Missing required fields: sessionId, userId, text',
+        mode: 'local',
+        duration_ms: Date.now() - start
+      }, 400);
+    }
+
+    // Mock Chat processing
+    const mockResponse = {
+      success: true,
+      messageId: crypto.randomUUID(),
+      status: 'queued',
+      mode: 'local',
+      duration_ms: Date.now() - start,
+      response: {
+        sessionId,
+        userId,
+        text: `Thanks for your message! Our AI assistant is processing: "${text}"`,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    console.log('[Chat Test] Mock Response:', mockResponse);
+    return c.json(mockResponse);
+
+  } catch (error) {
+    console.error('[Chat Test] Error:', error);
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      mode: 'local',
+      duration_ms: Date.now() - start
+    }, 500);
+  }
+});
+
+// Export test app
 export default app
+
+// Function to run all tests sequentially
+export async function runTests(env: Env) {
+  console.log('Running all tests...')
+  const results = {
+    health: await app.fetch(new Request('http://localhost:8787/health'), env),
+    workersAi: await app.fetch(new Request('http://localhost:8787/test/workers-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'Test embedding generation' })
+    }), env),
+    vectorize: await app.fetch(new Request('http://localhost:8787/test/vectorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'Test vector storage' })
+    }), env),
+    queue: await app.fetch(new Request('http://localhost:8787/test/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'test', businessId: 'test-business' })
+    }), env),
+    workflow: await app.fetch(new Request('http://localhost:8787/test/workflow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'test', payload: { businessId: 'test-business' } })
+    }), env),
+    email: await app.fetch(new Request('http://localhost:8787/test/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'test@example.com',
+        subject: 'Test Email',
+        content: 'Test content'
+      })
+    }), env),
+    chat: await app.fetch(new Request('http://localhost:8787/test/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'test-session',
+        userId: 'test-user',
+        text: 'Test message'
+      })
+    }), env),
+    slack: await app.fetch(new Request('http://localhost:8787/test/slack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: 'test-channel',
+        user: 'test-user',
+        text: 'Test message',
+        thread_ts: '1234567890.123456'
+      })
+    }), env)
+  }
+
+  for (const [test, response] of Object.entries(results)) {
+    console.log(`${test} test:`, await response.json())
+  }
+  console.log('All tests completed')
+  return results
+}

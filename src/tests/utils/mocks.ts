@@ -1,4 +1,4 @@
-import { VectorizeIndex, Ai, Queue, AiGateway } from '@cloudflare/workers-types'
+import { VectorizeIndex, Ai, Queue } from '@cloudflare/workers-types'
 import { vi } from 'vitest'
 
 export const createMockVectorizeIndex = (matches = []): VectorizeIndex => ({
@@ -18,10 +18,8 @@ export const createMockAi = (response: any = 'Test response'): Ai => ({
     return response
   }),
   aiGatewayLogId: 'test-log-id',
-  gateway: (gatewayId: string): AiGateway => ({
-    id: gatewayId,
-    name: 'test-gateway',
-    url: 'https://test.gateway'
+  gateway: vi.fn().mockReturnValue({
+    fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ response })))
   })
 })
 

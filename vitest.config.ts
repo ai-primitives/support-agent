@@ -9,11 +9,19 @@ export default defineConfig({
         DB: {
           type: 'd1',
           database: 'TEST_DB'
+        },
+        VECTORIZE_INDEX: {
+          type: 'vectorize',
+          index: 'TEST_INDEX'
+        },
+        AI: {
+          type: 'ai'
         }
       },
       d1Databases: ['TEST_DB'],
       d1Persist: true,
-      scriptPath: 'src/index.ts'
+      scriptPath: 'src/index.ts',
+      wranglerConfigPath: './wrangler.toml'
     },
     testTimeout: 60000,
     hookTimeout: 60000,

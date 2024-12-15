@@ -6,9 +6,9 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "test": "vitest",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' vitest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' vitest watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' vitest run --coverage",
     "deploy": "wrangler deploy",
     "build": "tsc --noEmit",
     "types": "wrangler types --experimental-include-runtime",

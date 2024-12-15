@@ -15,8 +15,14 @@ binding = "VECTORIZE_INDEX"
 index_name = "support_agent"
 
 [queues]
-message_queue = { binding = "MESSAGE_QUEUE", queue_name = "message-queue", dead_letter_queue = "dlq" }
-dlq = { binding = "DLQ", queue_name = "dlq" }
+producers = [
+  { queue = "message-queue", binding = "MESSAGE_QUEUE" },
+  { queue = "dlq", binding = "DLQ" }
+]
+consumers = [
+  { queue = "message-queue", max_batch_size = 10, max_batch_timeout = 30 },
+  { queue = "dlq", max_batch_size = 10, max_batch_timeout = 30 }
+]
 
 [build]
 command = "npm run build"

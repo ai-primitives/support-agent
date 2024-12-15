@@ -1,44 +1,44 @@
-import { Env } from '../bindings';
-import { handleRagQuery } from '../services/rag';
+import { Env } from '../bindings'
+import { RAGService } from '../services/rag'
+import { QueueMessage } from '../queue/types'
 
-interface SlackMessage {
-  channel: string;
-  user: string;
-  text: string;
-  thread_ts?: string;
-}
-
-export async function handleSlack(message: SlackMessage, env: Env): Promise<void> {
+export async function handleSlack(message: QueueMessage & { metadata: { channel?: string, thread_ts?: string, user?: string } }, env: Env): Promise<void> {
   try {
     // Extract content from Slack message
-    const { channel, user, text, thread_ts } = message;
+    const { businessId, persona, content, metadata } = message
 
     // Process query through RAG service
-    const response = await handleRagQuery(text, env);
+    const rag = new RAGService(env)
+    const response = await rag.generateResponse(content, businessId, persona)
 
     // Prepare Slack response
-    const replyMessage = {
-      type: 'slack' as const,
-      businessId: 'test-business', // In production, this would be determined from the channel or workspace
-      slack: {
-        channel,
-        text: response,
-        thread_ts: thread_ts, // Reply in thread if it exists
-        user: user // For @mentions
+    const replyMessage: QueueMessage = {
+      type: 'slack',
+      businessId,
+      persona,
+      content: response,
+      metadata: {
+        timestamp: Date.now(),
+        channelId: metadata?.channel,
+        threadId: metadata?.thread_ts,
+        userId: metadata?.user,
+        channel: metadata?.channel,
+        thread_ts: metadata?.thread_ts,
+        user: metadata?.user
       }
-    };
+    }
 
     // In local mode, just log the response
     if (env.LOCAL_MODE) {
-      console.log('Slack Response:', replyMessage);
-      return;
+      console.log('Slack Response:', replyMessage)
+      return
     }
 
     // In production, send through Cloudflare Queue
-    await env.MESSAGE_QUEUE.send(replyMessage);
+    await env.MESSAGE_QUEUE.send(replyMessage)
 
   } catch (error) {
-    console.error('Error handling Slack message:', error);
-    throw error;
+    console.error('Error handling Slack message:', error)
+    throw error
   }
 }

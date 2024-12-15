@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { Env } from '../bindings'
 import { handleEmail } from '../handlers/email'
 import { MessagePayload, EmailMessage } from '../types/workflow'
+import { ChatSession } from '../durable_objects/chat_session'
+import { KnowledgeWorkflow } from '../workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -85,5 +87,5 @@ app.post('/test/email', async (c) => {
   }
 })
 
-// Export default fetch handler for module worker
+export { ChatSession, KnowledgeWorkflow }
 export default app

@@ -1,61 +1,46 @@
--- Business profiles table
-CREATE TABLE business_profiles (
+-- Business profiles
+CREATE TABLE IF NOT EXISTS businesses (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  config JSON NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  config JSON,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
--- Customer personas table
-CREATE TABLE customer_personas (
+-- Customer personas
+CREATE TABLE IF NOT EXISTS personas (
   id TEXT PRIMARY KEY,
-  business_id TEXT NOT NULL,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
   name TEXT NOT NULL,
-  config JSON NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (business_id) REFERENCES business_profiles(id)
+  config JSON,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
--- Knowledge base entries table
-CREATE TABLE knowledge_base_entries (
+-- Knowledge base entries
+CREATE TABLE IF NOT EXISTS knowledge_base (
   id TEXT PRIMARY KEY,
-  business_id TEXT NOT NULL,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
   content TEXT NOT NULL,
-  metadata JSON NOT NULL,
-  embedding_id TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (business_id) REFERENCES business_profiles(id)
-);
-
--- Conversations table for tracking chat history
-CREATE TABLE conversations (
-  id TEXT PRIMARY KEY,
-  business_id TEXT NOT NULL,
-  customer_id TEXT,
-  channel TEXT NOT NULL,
-  status TEXT NOT NULL,
   metadata JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (business_id) REFERENCES business_profiles(id)
+  embedding_id TEXT,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
--- Messages table for storing conversation messages
-CREATE TABLE messages (
+-- Conversations
+CREATE TABLE IF NOT EXISTS conversations (
   id TEXT PRIMARY KEY,
-  conversation_id TEXT NOT NULL,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  persona_id TEXT REFERENCES personas(id),
+  channel TEXT NOT NULL,
+  metadata JSON,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+
+-- Messages
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT NOT NULL REFERENCES conversations(id),
   role TEXT NOT NULL,
   content TEXT NOT NULL,
   metadata JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
-
--- Indexes for better query performance
-CREATE INDEX idx_customer_personas_business_id ON customer_personas(business_id);
-CREATE INDEX idx_knowledge_base_entries_business_id ON knowledge_base_entries(business_id);
-CREATE INDEX idx_conversations_business_id ON conversations(business_id);
-CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);

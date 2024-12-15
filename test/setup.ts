@@ -1,33 +1,28 @@
-import { beforeAll, afterAll, beforeEach } from 'vitest'
-import { unstable_dev, type Unstable_DevWorker } from 'wrangler'
-import type { Env } from '../src/types.js'
+import { beforeAll, beforeEach, afterAll, vi } from 'vitest'
+import { SELF } from 'cloudflare:test'
+import '../src'
 
-let worker: Unstable_DevWorker
+// Mock external dependencies
+vi.mock('@cloudflare/ai', () => ({
+  Ai: vi.fn().mockImplementation(() => ({
+    run: vi.fn().mockResolvedValue({ response: 'test response', text: 'test text' }),
+    generateEmbeddings: vi.fn().mockResolvedValue([[0.1, 0.2, 0.3]])
+  }))
+}))
 
-export const setup = () => {
-  beforeAll(async () => {
-    worker = await unstable_dev('src/index.ts', {
-      experimental: { disableExperimentalWarning: true },
-      vars: {
-        ENVIRONMENT: 'test',
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-key'
-      },
-      local: true,
-      persist: false,
-      ip: '127.0.0.1',
-      localProtocol: 'http'
-    })
-  }, 35000)
+beforeAll(async () => {
+  // Initialize environment variables
+  process.env.ENVIRONMENT = 'test'
+  process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-key'
+  process.env.VECTORIZE_INDEX_NAME = 'test-index'
+  process.env.DB_NAME = 'test-db'
+  process.env.AI_MODEL = 'test-model'
+})
 
-  beforeEach(() => {
-    // Reset any test state if needed
-  })
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
-  afterAll(async () => {
-    if (worker) {
-      await worker.stop()
-    }
-  })
-
-  return { worker }
-}
+afterAll(async () => {
+  vi.resetModules()
+})

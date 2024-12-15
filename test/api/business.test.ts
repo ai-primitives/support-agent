@@ -1,12 +1,26 @@
 import { describe, it, expect } from 'vitest'
-import { setup } from '../setup.js'
+import { SELF } from 'cloudflare:test'
+import '../../src'
+
+interface BusinessResponse {
+  id: string
+  name: string
+  config: {
+    theme: string
+    language: string
+  }
+  created_at: string
+  updated_at: string
+}
+
+interface ErrorResponse {
+  error: string
+}
 
 describe('Business API', () => {
-  const ctx = setup()
-
   describe('POST /api/business', () => {
     it('should create a new business profile', async () => {
-      const response = await ctx.worker.fetch('/api/business', {
+      const response = await SELF.fetch('/api/business', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -21,7 +35,7 @@ describe('Business API', () => {
       })
 
       expect(response.status).toBe(201)
-      const data = await response.json()
+      const data = await response.json() as BusinessResponse
       expect(data).toMatchObject({
         name: 'Test Business',
         config: {
@@ -35,7 +49,7 @@ describe('Business API', () => {
     })
 
     it('should validate required fields', async () => {
-      const response = await ctx.worker.fetch('/api/business', {
+      const response = await SELF.fetch('/api/business', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -44,7 +58,7 @@ describe('Business API', () => {
       })
 
       expect(response.status).toBe(400)
-      const data = await response.json()
+      const data = await response.json() as ErrorResponse
       expect(data.error).toBeDefined()
     })
   })

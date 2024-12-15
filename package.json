@@ -10,14 +10,16 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "deploy": "wrangler deploy",
-    "build": "wrangler build",
+    "build": "wrangler deploy --dry-run --outdir=dist",
     "lint": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241205.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.36",
+    "@miniflare/d1": "^2.14.4",
+    "@types/node": "^22.10.2",
     "@vitest/coverage-v8": "^2.1.8",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
@@ -28,6 +30,7 @@
     "@cloudflare/ai": "^1.2.2",
     "@cloudflare/d1": "^1.4.1",
     "@hono/zod-validator": "^0.4.2",
+    "base64-js": "^1.5.1",
     "hono": "^4.6.14",
     "zod": "^3.24.1"
   }

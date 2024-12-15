@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import path from 'path'
 
 export default defineConfig({
   test: {
@@ -7,14 +8,35 @@ export default defineConfig({
     environmentOptions: {
       modules: true,
       bindings: {
-        // Add mock bindings for testing
         DB: {},
         VECTORIZE_INDEX: {},
-        AI: {}
-      }
+        AI: {},
+        MESSAGE_QUEUE: 'Queue',
+        DLQ: 'Queue',
+        CHAT_SESSIONS: {
+          className: 'ChatSession',
+          scriptName: 'worker'
+        }
+      },
+      durableObjects: {
+        CHAT_SESSIONS: 'ChatSession'
+      },
+      scriptPath: 'dist/worker.js',
+      buildCommand: 'npm run build',
+      wranglerConfigPath: 'wrangler.toml',
+      compatibilityFlags: ['nodejs_compat', 'experimental'],
+      compatibilityDate: '2024-01-01',
+      kvNamespaces: ['TEST_KV']
     },
-    testTimeout: 60000, // 60 second timeout for tests
-    hookTimeout: 60000, // 60 second timeout for hooks
-    setupFiles: ['test/setup.ts']
+    testTimeout: 60000,
+    hookTimeout: 60000,
+    setupFiles: ['src/tests/setup.ts'],
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json'
+    },
+    alias: {
+      '@cloudflare/ai': path.resolve(__dirname, './src/tests/mocks/@cloudflare/ai.ts')
+    }
   }
 })

@@ -7,6 +7,7 @@ import { MessageService } from '../services/message'
 import { handleEmail } from './email'
 import { handleSlack } from './slack'
 import { handleChat } from './chat'
+import { QueueMessage } from '../queue/types'
 
 const businessSchema = z.object({
   name: z.string(),
@@ -47,6 +48,23 @@ export const handle = {
   handleSlack,
   handleChat,
 
+  // Message queue handler
+  async handleMessage(message: QueueMessage, env: Env): Promise<void> {
+    switch (message.type) {
+      case 'email':
+        await handleEmail(message, env)
+        break
+      case 'slack':
+        await handleSlack(message, env)
+        break
+      case 'chat':
+        await handleChat(message, env)
+        break
+      default:
+        throw new Error(`Unknown message type: ${message.type}`)
+    }
+  },
+
   createBusiness: zValidator('json', businessSchema, (async (c: ValidatedContext) => {
     const input = await c.req.json() as BusinessInput
     const data = businessSchema.parse(input)
@@ -85,9 +103,12 @@ export const handle = {
     const rag = new RAGService(c.env)
     await rag.addKnowledge({
       id,
-      businessId,
+      business_id: businessId,
       content: data.content,
-      metadata: data.metadata
+      metadata: data.metadata || {},
+      embedding_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     })
 
     return c.json({ id, businessId, content: data.content, metadata: data.metadata }, 201)
@@ -119,7 +140,10 @@ export const handle = {
       businessId,
       conversationId,
       content: data.content,
-      metadata: data.metadata
+      metadata: {
+        timestamp: Date.now(),
+        ...data.metadata
+      }
     })
 
     return c.json({ status: 'message queued' }, 202)

@@ -32,7 +32,7 @@ export class RAGService {
 
   private async generateEmbeddingWithRetry(text: string, retries = 0): Promise<number[]> {
     try {
-      const response = await this.ai.run('@cf/baai/bge-base-en', {
+      const response = await this.ai.run('@cf/baai/bge-small-en-v1.5', {
         text
       }) as { data: number[][] }
 

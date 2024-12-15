@@ -4,7 +4,6 @@ import { QueueMessage } from './types'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-// Message producer endpoints
 app.post('/api/message/email', async (c) => {
   const { businessId, persona, content, metadata } = await c.req.json()
 

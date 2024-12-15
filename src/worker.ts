@@ -5,6 +5,37 @@ import { Ai } from '@cloudflare/workers-types'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
+/**
+ * Searches the vector store for relevant context based on the query
+ *
+ * @example
+ * ```typescript
+ * // Basic context search
+ * const results = await searchVectorStore(
+ *   env.SUPPORT_VECTORIZE,
+ *   env.SUPPORT_AI,
+ *   'How do I reset my password?',
+ *   'business1'
+ * )
+ *
+ * // Search with custom result limit
+ * const topResults = await searchVectorStore(
+ *   env.SUPPORT_VECTORIZE,
+ *   env.SUPPORT_AI,
+ *   'Tell me about enterprise features',
+ *   'business2',
+ *   3
+ * )
+ * ```
+ *
+ * @param index - Vectorize index instance
+ * @param ai - Workers AI instance for embedding generation
+ * @param query - User's question or request
+ * @param businessId - Business identifier for context isolation
+ * @param limit - Maximum number of results to return (default: 5)
+ * @returns Array of vector search results with relevance scores
+ * @throws Error if embedding generation fails or vector search fails
+ */
 async function searchVectorStore(
   index: VectorizeIndex,
   ai: Ai,
@@ -41,6 +72,51 @@ async function searchVectorStore(
   }
 }
 
+/**
+ * Generates an AI response using RAG with business context isolation
+ *
+ * @example
+ * ```typescript
+ * // Basic support query
+ * const response = await generateResponse(
+ *   env.SUPPORT_VECTORIZE,
+ *   env.SUPPORT_AI,
+ *   'How do I reset my password?',
+ *   'business1',
+ *   'support'
+ * )
+ *
+ * // Sales inquiry with different persona
+ * const salesResponse = await generateResponse(
+ *   env.SUPPORT_VECTORIZE,
+ *   env.SUPPORT_AI,
+ *   'Tell me about enterprise pricing',
+ *   'business2',
+ *   'sales'
+ * )
+ *
+ * // Error handling example
+ * try {
+ *   const response = await generateResponse(
+ *     env.SUPPORT_VECTORIZE,
+ *     env.SUPPORT_AI,
+ *     'Query with no matching context',
+ *     'non_existent_business',
+ *     'support'
+ *   )
+ * } catch (error) {
+ *   console.error('RAG pipeline failed:', error)
+ * }
+ * ```
+ *
+ * @param index - Vectorize index instance
+ * @param ai - Workers AI instance
+ * @param query - User's question or request
+ * @param businessId - Business identifier for context isolation
+ * @param persona - Agent persona (support, sales, billing)
+ * @returns AI response with metadata including used context
+ * @throws Error if context retrieval fails or no relevant context found
+ */
 export async function generateResponse(
   index: VectorizeIndex,
   ai: Ai,

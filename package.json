@@ -1,15 +1,17 @@
 {
   "name": "support-agent",
   "version": "1.0.0",
-  "description": "A Chat/Email/Slack Support Bot on Cloudflare Workers",
-  "main": "src/workers/index.ts",
+  "description": "A Chat/Email/Slack Support Bot on Cloudflare Workers, Workers AI, Vectorize, and Workflows",
+  "type": "module",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest",
+    "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "type-check": "tsc --noEmit"
+    "deploy": "wrangler deploy",
+    "build": "wrangler build",
+    "lint": "tsc --noEmit"
   },
   "keywords": [
     "cloudflare-workers",
@@ -19,13 +21,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ai-sdk/openai": "^1.0.8",
-    "@cloudflare/workers-types": "^4.20241205.0",
+    "@auth/core": "^0.37.4",
+    "@cloudflare/ai": "^1.2.2",
+    "@cloudflare/d1": "^1.4.1",
+    "@hono/zod-validator": "^0.4.2",
     "ai": "^4.0.18",
     "hono": "^4.6.14",
-    "typescript": "^5.7.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "swr": "^2.2.5",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
     "@miniflare/cache": "^2.14.4",
     "@miniflare/core": "^2.14.4",
     "@miniflare/d1": "^2.14.4",
@@ -36,12 +44,21 @@
     "@miniflare/shared": "^2.14.4",
     "@miniflare/storage-memory": "^2.14.4",
     "@miniflare/web-sockets": "^2.14.4",
-    "@types/jest": "^29.5.14",
+    "@storybook/addon-essentials": "^8.4.7",
+    "@storybook/react": "^8.4.7",
     "@types/node": "^22.10.2",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
-    "miniflare": "^3.20231030.4",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
     "vitest": "^2.1.8",
-    "vitest-environment-miniflare": "^2.14.4"
+    "vitest-environment-miniflare": "^2.14.4",
+    "wrangler": "^3.95.0"
   }
 }

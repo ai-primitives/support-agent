@@ -1,18 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
-    "lib": ["ES2020"],
+    "target": "ES2021",
+    "module": "ES2022",
+    "lib": ["ES2021", "DOM"],
     "moduleResolution": "node",
-    "types": ["@cloudflare/workers-types"],
-    "noEmit": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "esModuleInterop": true,
+    "types": [
+      "@cloudflare/workers-types",
+      "vitest/globals",
+      "node"
+    ],
+    "jsx": "react-jsx",
     "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true
+    "noEmit": true,
+    "allowJs": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src", "test"],
   "exclude": ["node_modules"]
 }

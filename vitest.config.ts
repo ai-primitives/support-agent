@@ -1,18 +1,21 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    globals: true,
     environment: 'miniflare',
     environmentOptions: {
       modules: true,
-      scriptPath: 'src/worker.ts',
       bindings: {
-        SUPPORT_QUEUE: 'Queue',
-        DLQ: 'Queue',
-        SUPPORT_AI: 'AI',
-        SUPPORT_VECTORIZE: 'VectorizeIndex'
+        DB: {},
+        VECTORIZE_INDEX: {},
+        AI: {},
+        MESSAGE_QUEUE: 'Queue',
+        DLQ: 'Queue'
       }
-    }
+    },
+    testTimeout: 60000, // 60 second timeout for tests
+    hookTimeout: 60000, // 60 second timeout for hooks
+    setupFiles: ['test/setup.ts']
   }
 })

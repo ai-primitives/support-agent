@@ -1,13 +1,21 @@
 name = "support-agent"
-main = "src/worker.ts"
-compatibility_date = "2023-12-01"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "support_agent"
+database_id = ""  # Will be filled after D1 database creation
 
 [[vectorize]]
-binding = "SUPPORT_VECTORIZE"
-index_name = "support-content"
+binding = "VECTORIZE_INDEX"
+index_name = "support_agent"
 
 [[ai]]
-binding = "SUPPORT_AI"
+binding = "AI"
 
 [ai.embeddings]
 model = "bge-small-en-v1.5"
@@ -15,16 +23,30 @@ model = "bge-small-en-v1.5"
 [ai.llm]
 model = "@cf/meta/llama-2-7b-chat-int8"
 
-[[queues]]
-binding = "SUPPORT_QUEUE"
-name = "support-messages"
-dead_letter_queue = "support-dlq"
+[durable_objects]
+bindings = [
+  { name = "CHAT_SESSIONS", class_name = "ChatSession" }
+]
 
-[[queues]]
-binding = "DLQ"
-name = "support-dlq"
+[[migrations]]
+tag = "v1"
+new_classes = ["ChatSession"]
 
-[[d1_databases]]
-binding = "DB"
-database_name = "support_agent"
-database_id = ""  # Will be filled after creation
+[queues]
+producers = [
+  { binding = "MESSAGE_QUEUE", queue = "support-messages" }
+]
+consumers = [
+  { queue = "support-messages" }
+]
+
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[dev]
+port = 8787
+
+[miniflare]
+kv_persist = true
+cache_persist = true

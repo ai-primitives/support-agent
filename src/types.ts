@@ -1,10 +1,14 @@
 import { VectorizeIndex, VectorizeMatches, D1Database } from '@cloudflare/workers-types'
 import { Ai } from '@cloudflare/workers-types'
+import { Queue } from '@cloudflare/workers-types'
+import { QueueMessage, ProcessedMessage, QueueError } from './queue/types'
 
 export interface Bindings {
   SUPPORT_VECTORIZE: VectorizeIndex
   SUPPORT_AI: Ai
   DB: D1Database
+  SUPPORT_QUEUE: Queue<QueueMessage>
+  DLQ: Queue<QueueError>
 }
 
 export interface VectorSearchResult {

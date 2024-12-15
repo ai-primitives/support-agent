@@ -15,6 +15,15 @@ model = "bge-small-en-v1.5"
 [ai.llm]
 model = "@cf/meta/llama-2-7b-chat-int8"
 
+[[queues]]
+binding = "SUPPORT_QUEUE"
+name = "support-messages"
+dead_letter_queue = "support-dlq"
+
+[[queues]]
+binding = "DLQ"
+name = "support-dlq"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "support_agent"

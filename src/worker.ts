@@ -41,7 +41,7 @@ async function searchVectorStore(
   }
 }
 
-async function generateResponse(
+export async function generateResponse(
   index: VectorizeIndex,
   ai: Ai,
   query: string,

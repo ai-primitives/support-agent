@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, vi } from 'vitest'
-import { unstable_dev } from 'wrangler'
+import { unstable_dev, Unstable_DevWorker } from 'wrangler'
+import type { Env } from '../src/types'
 
 // Mock external dependencies
 vi.mock('@cloudflare/ai', () => ({
@@ -19,7 +20,11 @@ vi.mock('@cloudflare/workers-types', () => ({
   }))
 }))
 
-let worker: any
+let worker: Unstable_DevWorker
+
+export interface TestWorker extends Pick<Unstable_DevWorker, 'fetch'> {
+  env: Env
+}
 
 beforeAll(async () => {
   worker = await unstable_dev('src/index.ts', {
@@ -33,7 +38,7 @@ beforeAll(async () => {
     }
   })
 
-  // Initialize database schema using worker's fetch
+  // Initialize database schema
   const response = await worker.fetch('/api/setup', {
     method: 'POST'
   })
@@ -47,4 +52,4 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-export const setup = async () => worker
+export const setup = async () => worker as unknown as TestWorker

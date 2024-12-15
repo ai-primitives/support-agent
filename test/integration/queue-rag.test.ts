@@ -1,13 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { setup } from '../setup'
 import { MessageProducer } from '../../src/queues/producer'
 import { RAGService } from '../../src/services/rag'
 import type { Message } from '../../src/queues/types'
+import type { TestWorker } from '../setup'
 
 describe('Queue-RAG Integration', () => {
-  const { worker } = setup()
+  let worker: TestWorker
   let messageProducer: MessageProducer
   let ragService: RAGService
+
+  beforeAll(async () => {
+    worker = await setup()
+  })
 
   beforeEach(() => {
     messageProducer = new MessageProducer(worker.env.MESSAGE_QUEUE)
@@ -62,7 +67,7 @@ describe('Queue-RAG Integration', () => {
         }
       })
     })
-    const persona = await personaResp.json()
+    const persona = await personaResp.json() as { id: string; business_id: string }
 
     const message: Message = {
       id: crypto.randomUUID(),

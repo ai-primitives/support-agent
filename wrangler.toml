@@ -1,0 +1,21 @@
+name = "support-agent"
+main = "src/worker.ts"
+compatibility_date = "2023-12-01"
+
+[[vectorize]]
+binding = "SUPPORT_VECTORIZE"
+index_name = "support-content"
+
+[[ai]]
+binding = "SUPPORT_AI"
+
+[ai.embeddings]
+model = "bge-small-en-v1.5"
+
+[ai.llm]
+model = "@cf/meta/llama-2-7b-chat-int8"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "support_agent"
+database_id = ""  # Will be filled after creation

@@ -14,6 +14,23 @@ database_id = ""  # Will be filled after D1 database creation
 binding = "VECTORIZE_INDEX"
 index_name = "support_agent"
 
+[durable_objects]
+bindings = [
+  { name = "CHAT_SESSIONS", class_name = "ChatSession" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ChatSession"]
+
+[queues]
+producers = [
+  { binding = "MESSAGE_QUEUE", queue = "support-messages" }
+]
+consumers = [
+  { queue = "support-messages" }
+]
+
 [build]
 command = "npm run build"
 watch_dir = "src"

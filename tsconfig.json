@@ -2,22 +2,23 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "ES2022",
-    "lib": ["ES2021"],
+    "lib": ["ES2021", "DOM"],
     "moduleResolution": "node",
     "types": [
       "@cloudflare/workers-types",
-      "vitest/globals"
+      "vitest/globals",
+      "node"
     ],
-    "noEmit": true,
+    "jsx": "react-jsx",
     "strict": true,
+    "noEmit": true,
+    "allowJs": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowJs": true,
-    "checkJs": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "test/**/*", "*.config.ts"],
+  "include": ["src", "test"],
   "exclude": ["node_modules"]
 }

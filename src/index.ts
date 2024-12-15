@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { businessRoutes } from './api/business.js'
 import { personaRoutes } from './api/persona.js'
 import { knowledgeBaseRoutes } from './api/knowledge-base.js'
+import setupRoutes from './api/setup.js'
 import type { Env } from './types.js'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -19,6 +20,7 @@ app.onError((err, c) => {
 app.route('/api/business', businessRoutes)
 app.route('/api/persona', personaRoutes)
 app.route('/api/knowledge-base', knowledgeBaseRoutes)
+app.route('/api/setup', setupRoutes)
 
 // Health check endpoint
 app.get('/health', (c) => c.json({ status: 'ok' }))

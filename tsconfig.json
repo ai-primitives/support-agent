@@ -1,23 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "ES2022",
-    "lib": ["ES2021", "WebWorker"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020"],
+    "types": ["./.wrangler/types/runtime.d.ts"],
     "moduleResolution": "node",
-    "types": [
-      "vitest/globals",
-      "./.wrangler/types/runtime.d.ts"
-    ],
-    "noEmit": true,
     "strict": true,
+    "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowJs": true,
-    "checkJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src/**/*", "test/**/*", "*.config.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "*.d.ts"],
   "exclude": ["node_modules"]
 }

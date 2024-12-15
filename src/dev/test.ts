@@ -7,29 +7,59 @@ import { KnowledgeWorkflow } from '../workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
+// Health check endpoint
+app.get('/health', (c) => {
+  return c.json({ status: 'ok' })
+})
+
 // Test Workers AI
 app.post('/test/workers-ai', async (c) => {
-  const { text } = await c.req.json()
+  const body = await c.req.json()
+  if (!body.text || typeof body.text !== 'string') {
+    return c.json({ success: false, error: 'Invalid input: text field is required and must be a string' }, 400)
+  }
+
   try {
-    const embedding = await c.env.AI.run('@cf/bge-small-en-v1.5', { text })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
+    const embedding = await c.env.AI.run('@cf/bge-small-en-v1.5', {
+      text: body.text
+    })
+
+    clearTimeout(timeout)
     return c.json({ success: true, embedding: embedding.data[0] })
-  } catch (error) {
-    console.error('Workers AI Error:', error)
-    return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+  } catch (err: unknown) {
+    console.error('Workers AI Error:', err)
+    if (err instanceof Error && err.name === 'AbortError') {
+      return c.json({ success: false, error: 'Request timed out' }, 504)
+    }
+    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
   }
 })
 
 // Test Vectorize
 app.post('/test/vectorize', async (c) => {
-  const { text } = await c.req.json()
+  const body = await c.req.json()
+  if (!body.text || typeof body.text !== 'string') {
+    return c.json({ success: false, error: 'Invalid input: text field is required and must be a string' }, 400)
+  }
+
   try {
-    const embedding = await c.env.AI.run('@cf/bge-small-en-v1.5', { text })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+
+    const embedding = await c.env.AI.run('@cf/bge-small-en-v1.5', {
+      text: body.text
+    })
+
+    clearTimeout(timeout)
     const id = crypto.randomUUID()
 
     await c.env.VECTORIZE.upsert([{
       id,
       values: embedding.data[0],
-      metadata: { content: text }
+      metadata: { content: body.text }
     }])
 
     const results = await c.env.VECTORIZE.query(embedding.data[0], {
@@ -39,9 +69,12 @@ app.post('/test/vectorize', async (c) => {
     })
 
     return c.json({ success: true, results })
-  } catch (error) {
-    console.error('Vectorize Error:', error)
-    return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+  } catch (err: unknown) {
+    console.error('Vectorize Error:', err)
+    if (err instanceof Error && err.name === 'AbortError') {
+      return c.json({ success: false, error: 'Request timed out' }, 504)
+    }
+    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
   }
 })
 
@@ -64,9 +97,9 @@ app.post('/test/queue', async (c) => {
 
     await c.env.MESSAGE_QUEUE.send(message)
     return c.json({ success: true, message: 'Message queued successfully' })
-  } catch (error) {
-    console.error('Queue Error:', error)
-    return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+  } catch (err: unknown) {
+    console.error('Queue Error:', err)
+    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
   }
 })
 
@@ -81,9 +114,29 @@ app.post('/test/email', async (c) => {
     }
     const response = await handleEmail(testEmail, c.env)
     return c.json({ success: true, response })
-  } catch (error) {
-    console.error('Email Handler Error:', error)
-    return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+  } catch (err: unknown) {
+    console.error('Email Handler Error:', err)
+    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
+  }
+})
+
+// Test Workflow
+app.post('/test/workflow', async (c) => {
+  try {
+    const workflowId = crypto.randomUUID()
+    await c.env.KNOWLEDGE_WORKFLOW.dispatch(workflowId, {
+      type: 'knowledge_processed',
+      businessId: 'test-business',
+      content: 'Test workflow execution',
+      metadata: {
+        source: 'test',
+        timestamp: new Date().toISOString()
+      }
+    })
+    return c.json({ success: true, workflowId })
+  } catch (err: unknown) {
+    console.error('Workflow Error:', err)
+    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
   }
 })
 

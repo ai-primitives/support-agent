@@ -20,10 +20,28 @@ export interface WorkflowEntrypoint<E = unknown> {
   run(event: WorkflowEvent, step: WorkflowStep): Promise<void>
 }
 
+export interface EmailMessage {
+  from: string
+  to: string[]
+  subject: string
+  text: string
+  html?: string
+  metadata?: Record<string, unknown>
+}
+
 export interface MessagePayload {
-  type: 'email' | 'slack' | 'chat'
+  type: 'email' | 'slack' | 'chat' | 'knowledge_processed' | 'knowledge_error'
   businessId: string
-  conversationId: string
-  content: string
+  conversationId?: string
+  content?: string
+  email?: {
+    from: string
+    to: string[]
+    subject: string
+    text: string
+    html?: string
+  }
+  status?: 'success' | 'error'
+  error?: string
   metadata?: Record<string, unknown>
 }

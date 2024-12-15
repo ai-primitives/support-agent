@@ -5,6 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [ai]
 binding = "AI"
+model = "@cf/bge-small-en-v1.5"
 
 [[vectorize]]
 binding = "VECTORIZE"

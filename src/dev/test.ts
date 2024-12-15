@@ -14,27 +14,33 @@ app.get('/health', (c) => {
 
 // Test Workers AI
 app.post('/test/workers-ai', async (c) => {
-  const body = await c.req.json()
-  if (!body.text || typeof body.text !== 'string') {
-    return c.json({ success: false, error: 'Invalid input: text field is required and must be a string' }, 400)
-  }
-
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 10000) // 10s timeout
+    const body = await c.req.json()
+    if (!body.text || typeof body.text !== 'string') {
+      return c.json({ error: 'Invalid input: text field is required and must be a string' }, 400)
+    }
+
+    console.log('Testing Workers AI with text:', body.text)
+    const startTime = Date.now()
 
     const embedding = await c.env.AI.run('@cf/bge-small-en-v1.5', {
       text: body.text
     })
 
-    clearTimeout(timeout)
-    return c.json({ success: true, embedding: embedding.data[0] })
-  } catch (err: unknown) {
-    console.error('Workers AI Error:', err)
-    if (err instanceof Error && err.name === 'AbortError') {
-      return c.json({ success: false, error: 'Request timed out' }, 504)
-    }
-    return c.json({ success: false, error: err instanceof Error ? err.message : 'Unknown error' }, 500)
+    const duration = Date.now() - startTime
+    console.log('Workers AI response time:', duration, 'ms')
+
+    return c.json({
+      success: true,
+      embedding,
+      duration_ms: duration
+    })
+  } catch (error: unknown) {
+    console.error('Workers AI Error:', error)
+    return c.json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error instanceof Error ? error.constructor.name : typeof error
+    }, 500)
   }
 })
 

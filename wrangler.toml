@@ -1,0 +1,26 @@
+name = "support-agent"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "support_agent"
+database_id = ""  # Will be filled after D1 database creation
+
+[[vectorize]]
+binding = "VECTORIZE_INDEX"
+index_name = "support_agent"
+
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[dev]
+port = 8787
+
+[miniflare]
+kv_persist = true
+cache_persist = true

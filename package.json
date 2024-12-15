@@ -1,0 +1,15 @@
+{
+  "name": "support-agent",
+  "version": "1.0.0",
+  "description": "A Chat/Email/Slack Support Bot on Cloudflare Workers",
+  "main": "src/workers/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["cloudflare-workers", "support-bot", "ai"],
+  "author": "",
+  "license": "ISC"
+}

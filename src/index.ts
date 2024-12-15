@@ -1,9 +1,11 @@
 import { Hono } from 'hono'
-import { businessRoutes } from './api/business.js'
-import { personaRoutes } from './api/persona.js'
-import { knowledgeBaseRoutes } from './api/knowledge-base.js'
-import setupRoutes from './api/setup.js'
-import type { Env } from './types.js'
+import { businessRoutes } from './api/business'
+import { personaRoutes } from './api/persona'
+import { knowledgeBaseRoutes } from './api/knowledge-base'
+import setupRoutes from './api/setup'
+import { createMessageConsumer } from './queues/consumer'
+import type { MessageBatch } from './queues/types'
+import type { Env } from './types'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -26,5 +28,9 @@ app.route('/api/setup', setupRoutes)
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
 export default {
-  fetch: app.fetch
+  fetch: app.fetch,
+  queue: async (batch: MessageBatch, env: Env) => {
+    const consumer = createMessageConsumer(env)
+    await consumer.processMessage(batch)
+  }
 }

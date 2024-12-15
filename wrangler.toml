@@ -14,6 +14,15 @@ database_id = ""  # Will be filled after D1 database creation
 binding = "VECTORIZE_INDEX"
 index_name = "support_agent"
 
+[[queues]]
+binding = "MESSAGE_QUEUE"
+name = "message-queue"
+dead_letter_queue = "dlq"
+
+[[queues]]
+binding = "DLQ"
+name = "dlq"
+
 [build]
 command = "npm run build"
 watch_dir = "src"

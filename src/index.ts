@@ -1,34 +1,39 @@
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
-import { prettyJSON } from 'hono/pretty-json'
-import { cors } from 'hono/cors'
+import { businessRoutes } from './api/business.js'
+import { personaRoutes } from './api/persona.js'
+import { knowledgeBaseRoutes } from './api/knowledge-base.js'
 import { handle } from './handlers'
-import type { Env } from './bindings'
+import type { Env } from './types'
 import { ChatSession } from './durable_objects/chat_session'
-import { runTests } from './dev/test'
 import { KnowledgeWorkflow } from './workflows/knowledge'
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.use('*', logger())
-app.use('*', prettyJSON())
-app.use('*', cors())
+// Add middleware for error handling
+app.onError((err: Error, c: { json: (data: any, status?: number) => any, env: Env }) => {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    console.error(`Error: ${err.message}`)
+  }
+  return c.json({
+    error: err.message,
+    stack: c.env.ENVIRONMENT === 'development' ? err.stack : undefined
+  }, 500)
+})
 
-app.post('/api/businesses', handle.createBusiness)
-app.post('/api/businesses/:id/personas', handle.createPersona)
-app.post('/api/businesses/:id/knowledge', handle.addKnowledge)
-app.get('/api/businesses/:id/knowledge/search', handle.searchKnowledge)
+// Add routes
+app.route('/api/business', businessRoutes)
+app.route('/api/persona', personaRoutes)
+app.route('/api/knowledge-base', knowledgeBaseRoutes)
+
+// Legacy routes (to be migrated)
 app.post('/api/businesses/:id/conversations/:conversationId/messages', handle.sendMessage)
 app.post('/api/businesses/:id/workflows/knowledge', handle.triggerKnowledgeWorkflow)
 
-app.get('/', (c) => c.json({ message: 'Support Agent API' }))
+// Health check endpoint
+app.get('/health', (c: { json: (data: any) => any }) => c.json({ status: 'ok' }))
 
-// Development test endpoint
-app.get('/test', async (c) => {
-  await runTests(c.env)
-  return c.json({ message: 'Tests completed' })
-})
-
-export default app
+export default {
+  fetch: app.fetch
+}
 export { ChatSession }
 export { KnowledgeWorkflow }
